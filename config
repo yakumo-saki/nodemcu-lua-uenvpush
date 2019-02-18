@@ -1,0 +1,27 @@
+-- このファイルは lua ファイルですが、 upload *.lua した時に
+-- 上書きされないように会えて拡張子をつけていません
+
+-- https://nodemcu.readthedocs.io/en/master/en/modules/gpio/
+D0=3
+D1=1
+D2=2
+D3=9
+D4=4
+D5=5
+D6=6
+D7=7
+D8=8
+D9=11
+D10=12
+-- end esp8266 nodemcu pin
+
+-- 変更不要
+id=0
+
+sda=D5
+scl=D6
+
+OVERSAMPLING_16 = 5
+alt=24.2
+
+mdns_name="uenvbedroom"
