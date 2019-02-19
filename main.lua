@@ -5,6 +5,15 @@ bme_pres = 0
 bme_humi = 0
 bme_alt = 0
 
+function publishCallback()
+  itemsPublished = (itemsPublished or 0) + 1
+  if itemsPublished == mqtt_send_count then
+    print("done")
+	m:close();
+	node.dsleep()
+  end
+end   
+
 function read_bme()
 	print("reading bme280(read)")
 	T, P, H, QNH = bme280.read(alt)
@@ -60,7 +69,7 @@ print("initializing BME280 or BMP280")
 sensor_type = nil
 while (sensor_type == nil) do
 	sensor_type = bme280.setup()
-	print("sensor setup failed. retry.")
+	print("BMx280 sensor setup failed. retry.")
 	tmr.delay(1000 * 1000)
 end
 
@@ -70,21 +79,32 @@ elseif sensor_type == 2 then
 	print("sensor is BME280")
 end
 
-print("HTTP server start")
-dofile('httpServer.lua')
-httpServer:listen(80)
-
-print("HTTP GET / Handler setup")
-dofile('handleGet.lua')
-
-print('mdns start hostname=' .. mdns_name)
-mdns.register(mdns_name, { description="dumb_display", service="http", port=80, location='Living Room' })
-
-print('first read BME')
+print('read BME')
 tmr.delay(3000)
 read_bme()
 
-print('start timer')
-mytimer = tmr.create()
-mytimer:register(3000, tmr.ALARM_AUTO, function() read_bme() end)
-mytimer:start()
+-- init mqtt client without logins, keepalive timer 120s
+m = mqtt.Client("clientid", 120)
+
+m:on("connect", function(client) print ("connected") end)
+m:on("offline", function(client) print ("offline") end)
+
+-- on publish overflow receive event
+m:on("overflow", function(client, topic, data)
+  print(topic .. " partial overflowed message: " .. data )
+end)
+
+m:connect(mqtt_broker, mqtt_broker_port, 0, function(client)
+  print("connected")
+
+  -- mqtt:publish(topic, payload, qos, retain[, function(client)])
+  client:publish(mqtt_topic_temp, bme_temp, 0, 0, publishCallback)
+  client:publish(mqtt_topic_humi, bme_humi, 0, 0, publishCallback)
+  client:publish(mqtt_topic_pres, bme_pres, 0, 0, publishCallback)
+end,
+function(client, reason)
+  print("failed reason: " .. reason)
+end)
+
+-- m:close();
+-- you can call m:connect again

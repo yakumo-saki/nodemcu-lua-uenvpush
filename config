@@ -18,10 +18,19 @@ D10=12
 -- 変更不要
 id=0
 
-sda=D5
-scl=D6
+sda=D1
+scl=D2
 
 OVERSAMPLING_16 = 5
 alt=24.2
 
-mdns_name="uenvbedroom"
+mqtt_broker="10.1.0.21"
+mqtt_broker_port=1883
+
+mqtt_send_count = 3
+mqtt_topic_temp="outer1/temp"
+mqtt_topic_humi="outer1/humi"
+mqtt_topic_pres="outer1/pres"
+
+-- data send interval (dsleep duration) us
+dsleep_duration=5 * 60 * 1000 * 1000
