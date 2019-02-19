@@ -5,13 +5,18 @@ bme_pres = 0
 bme_humi = 0
 bme_alt = 0
 
+itemsPublished = 0
+
 function publishCallback()
-  itemsPublished = (itemsPublished or 0) + 1
-  if itemsPublished == mqtt_send_count then
-    print("done")
-	m:close();
-	node.dsleep()
-  end
+	itemsPublished = (itemsPublished or 0) + 1
+	print("items published " .. itemsPublished)
+
+	if (itemsPublished >= mqtt_send_count) then
+		print("All done!! go to deep sleep for " .. dsleep_duration .. "us")
+		m:close()
+		node.dsleep(dsleep_duration)
+		tmr.delay(10000)  -- this maybe not execute
+	end
 end   
 
 function read_bme()
@@ -55,22 +60,15 @@ dofile('config')
 print("initializing I2C")
 i2c.setup(0, sda, scl, i2c.SLOW) -- call i2c.setup() only once
 
-print("i2c scan")
-for i=0,127 do
-	i2c.start(id)
-	resCode = i2c.address(id, i, i2c.TRANSMITTER)
-	i2c.stop(id)
-	if resCode == true then print("We have a device on address 0x" .. string.format("%02x", i) .. " (" .. i ..")") end
-end
-
-print("end i2c scan")
-
 print("initializing BME280 or BMP280")
 sensor_type = nil
 while (sensor_type == nil) do
+  tmr.delay(500 * 1000)
 	sensor_type = bme280.setup()
-	print("BMx280 sensor setup failed. retry.")
-	tmr.delay(1000 * 1000)
+	
+	if sensor_type == nil then
+		print("BMx280 sensor setup failed. retry.")
+	end
 end
 
 if sensor_type == 1 then
@@ -80,14 +78,14 @@ elseif sensor_type == 2 then
 end
 
 print('read BME')
-tmr.delay(3000)
+tmr.delay(500)
 read_bme()
 
 -- init mqtt client without logins, keepalive timer 120s
-m = mqtt.Client("clientid", 120)
+m = mqtt.Client(mqtt_client_name, 120)
 
-m:on("connect", function(client) print ("connected") end)
-m:on("offline", function(client) print ("offline") end)
+-- m:on("connect", function(client) print ("connected") end)
+-- m:on("offline", function(client) print ("offline") end)
 
 -- on publish overflow receive event
 m:on("overflow", function(client, topic, data)
@@ -95,16 +93,41 @@ m:on("overflow", function(client, topic, data)
 end)
 
 m:connect(mqtt_broker, mqtt_broker_port, 0, function(client)
-  print("connected")
+		print("connected")
 
-  -- mqtt:publish(topic, payload, qos, retain[, function(client)])
-  client:publish(mqtt_topic_temp, bme_temp, 0, 0, publishCallback)
-  client:publish(mqtt_topic_humi, bme_humi, 0, 0, publishCallback)
-  client:publish(mqtt_topic_pres, bme_pres, 0, 0, publishCallback)
-end,
-function(client, reason)
-  print("failed reason: " .. reason)
+		-- mqtt:publish(topic, payload, qos, retain[, function(client)])
+		print("send " .. mqtt_topic_temp .. "=>" .. bme_temp)
+		client:publish(mqtt_topic_temp, bme_temp, 0, 0, publishCallback)
+		print("send " .. mqtt_topic_humi .. "=>" .. bme_humi)
+		client:publish(mqtt_topic_humi, bme_humi, 0, 0, publishCallback)
+		print("send " .. mqtt_topic_pres .. "=>" .. bme_pres)
+		client:publish(mqtt_topic_pres, bme_pres, 0, 0, publishCallback)
+		print("send done.")
+	end,
+	function(client, reason)
+		print("failed reason: " .. reason)
+		if reason == -5 then
+			print("mqtt.CONN_FAIL_SERVER_NOT_FOUND")
+		elseif reason == -4 then
+			print("mqtt.CONN_FAIL_NOT_A_CONNACK_MSG")
+		elseif reason == -3 then
+			print("mqtt.CONN_FAIL_DNS")
+		elseif reason == -2 then
+			print("mqtt.CONN_FAIL_TIMEOUT_RECEIVING")
+		elseif reason == -1 then
+			print("mqtt.CONN_FAIL_TIMEOUT_SENDING")
+		elseif reason == 0 then
+			print("mqtt.CONNACK_ACCEPTED.  this is not error")
+		elseif reason == 1 then
+			print("mqtt.CONNACK_REFUSED_PROTOCOL_VER")
+		elseif reason == 2 then
+			print("mqtt.CONNACK_REFUSED_ID_REJECTED")
+		elseif reason == 3 then
+			print("mqtt.CONNACK_REFUSED_SERVER_UNAVAILABLE")
+		elseif reason == 4 then
+			print("mqtt.CONNACK_REFUSED_BAD_USER_OR_PASS")
+		elseif reason == 5 then
+			print("mqtt.CONNACK_REFUSED_NOT_AUTHORIZED")
+		end
 end)
 
--- m:close();
--- you can call m:connect again

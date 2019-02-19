@@ -34,8 +34,8 @@ wifi_got_ip_event = function(T)
   -- Internet connectivity can be determined with net.dns.resolve().
   print("Wifi connection is ready! IP address is: "..T.IP)
   print("Startup will resume momentarily, you have 3 seconds to abort.")
-  print("Waiting...")
-  tmr.create():alarm(STARTUP_WAIT_MS, tmr.ALARM_SINGLE, startup)
+  print("Waiting... ")
+  tmr.create():alarm(10, tmr.ALARM_SINGLE, startup)
 end
 
 wifi_disconnect_event = function(T)
