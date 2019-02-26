@@ -28,10 +28,10 @@ mqtt_broker="10.1.0.21"
 mqtt_broker_port=1883
 
 mqtt_send_count = 3
-mqtt_client_name="outer1"
+mqtt_client_name="outer2"
 mqtt_topic_temp="/" .. mqtt_client_name .. "/temp"
 mqtt_topic_humi="/" .. mqtt_client_name .. "/humi"
 mqtt_topic_pres="/" .. mqtt_client_name .. "/pres"
 
 -- data send interval (dsleep duration) us
-dsleep_duration=5 * 1000 * 1000
+dsleep_duration=300 * 1000 * 1000
