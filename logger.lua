@@ -8,25 +8,15 @@ Logger.LAST_USED_FILE = "log-lastused.log"
 Logger.FILE_PREFIX = "log-"
 Logger.FILE_SUFFIX = ".log"
 Logger.LOG_FILE_NO = 0
-Logger.MAX_LOG_FILES = 9
+Logger.MAX_LOG_FILES = 99
 
 Logger.create = function()
-    pattern = Logger.FILE_PREFIX .. "%%d" .. Logger.FILE_SUFFIX
-    l = file.list();
-    for k,v in pairs(l) do
-    print("name:" .. k ..", size:" .. v)
-    end
-
     local obj = {}
     obj.LOG_FILENAME = Logger.get_filename()
     obj.EXTRA_FUNC = nil
 
     obj.init = function(self)
         print(self.LOG_FILENAME)
-        -- self.LOG_FILE = file.open(self.LOG_FILENAME, "w")
-        -- if self.LOG_FILE == nil then
-            -- print(self.LOG_FILENAME .. " open failed (flag w)")
-        -- end
     end
     
     obj.close = function(self)
@@ -94,7 +84,7 @@ Logger.get_filename = function()
         file_no = 0
     end 
 
-    NOW_FILE = Logger.FILE_PREFIX .. string.format("%i", file_no) .. Logger.FILE_SUFFIX
+    NOW_FILE = Logger.FILE_PREFIX .. string.format("%02i", file_no) .. Logger.FILE_SUFFIX
     print ("NOW_FILE = " .. NOW_FILE)
 
     if file.open(Logger.LAST_USED_FILE, "w") then
