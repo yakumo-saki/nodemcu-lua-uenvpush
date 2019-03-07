@@ -59,8 +59,8 @@ end
 
 logger:info("Watchdog timer set")
 watchdog = tmr.create()
-watchdog:register(1000, tmr.ALARM_SINGLE, function(t) 
-	logger.error("watchdog timer hit. go to deep sleep")
+watchdog:register(10 * 1000, tmr.ALARM_SINGLE, function(t) 
+	logger:error("watchdog timer hit. go to deep sleep")
 	logger:info("go to deep sleep for " .. dsleep_duration .. "us")
 	node.dsleep(dsleep_duration)		
 end)
@@ -92,6 +92,10 @@ end
 logger:info('read BME')
 tmr.delay(500)
 read_bme()
+
+-- set bme280 to sleep mode
+logger:info("Sleeping BME280 or BMP280")
+bme280.setup(5, 5, 5, 0)
 
 -- init mqtt client without logins, keepalive timer 120s
 m = mqtt.Client(mqtt_client_name, 120)

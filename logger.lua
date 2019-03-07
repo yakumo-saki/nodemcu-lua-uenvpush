@@ -4,6 +4,8 @@
 -- log-{lognum}.log  -> log file
 
 Logger = {}
+Logger.MSG_TYPO = "self is nil. Maybe typo. use logger:xxxx instead of logger.xxxx"
+
 Logger.LAST_USED_FILE = "log-lastused.log"
 Logger.FILE_PREFIX = "log-"
 Logger.FILE_SUFFIX = ".log"
@@ -18,31 +20,6 @@ Logger.create = function()
     obj.init = function(self)
         print(self.LOG_FILENAME)
     end
-    
-    obj.close = function(self)
-        self.info("Log file closed.")
-        -- do nothing.
-    end
-
-    obj.add_extra_handler = function(self, func)
-        self.EXTRA_FUNC = func
-    end
-
-    obj.debug = function(self, msg)
-        self.log(self, "DEBUG", msg)
-    end
-
-    obj.info = function(self, msg)
-        self.log(self, "INFO", msg)
-    end
-
-    obj.warn = function(self, msg)
-        self.log(self, "WARN", msg)
-    end
-
-    obj.error = function(self, msg)
-        self.log(self, "ERROR", msg)
-    end
 
     obj.log = function(self, level, msg)
         local log = string.format("%s %s %s", tmr.now(), level, msg)
@@ -56,6 +33,35 @@ Logger.create = function()
         if (self.EXTRA_FUNC ~= nil) then
             self.EXTRA_FUNC(msg)
         end
+    end
+
+    obj.close = function(self)
+        self.info("Log file closed.")
+        -- do nothing.
+    end
+
+    obj.add_extra_handler = function(self, func)
+        self.EXTRA_FUNC = func
+    end
+
+    obj.debug = function(self, msg)
+        if self == nil then print(Logger.MSG_TYPO) end
+        self.log(self, "DEBUG", msg)
+    end
+
+    obj.info = function(self, msg)
+        if self == nil then print(Logger.MSG_TYPO) end
+        self.log(self, "INFO", msg)
+    end
+
+    obj.warn = function(self, msg)
+        if self == nil then print(Logger.MSG_TYPO) end
+        self.log(self, "WARN", msg)
+    end
+
+    obj.error = function(self, msg)
+        if self == nil then print(Logger.MSG_TYPO) end
+        self.log(self, "ERROR", msg)
     end
 
     obj:init()
